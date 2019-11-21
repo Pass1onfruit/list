@@ -1,0 +1,252 @@
+#include <iostream>
+//include <assert.h>
+
+using namespace std;
+//#include <algorithm>
+//链表的insert不会导致迭代器失效（野指针），erase会
+//list<int>::iterator pos = find(l.begin(), l.end(),3);
+//l.insert(pos, 30);
+//
+
+namespace mine
+{
+	template <typename T> class List_node
+	{
+	public:
+		List_node(const T& data = T())
+			:_prev(nullptr)
+			, _next(nullptr)
+			, _data(data)
+		{}
+		List_node <T>* _prev;
+		List_node <T>* _next;
+		T _data;
+	};
+
+	//空间不是最重要的，类型才是最重要的
+	template <class T>//迭代器  //list<int>::iterator it(p)  //4个字节
+	class itr
+	{
+	public:
+		typedef List_node <T> Node;
+		typedef itr <T> Self;
+
+		Node* _cur;
+
+		itr(Node* cur)
+			:_cur(cur)
+		{}
+
+		T& operator *()//内置类型
+		{
+			return _cur->_data;
+		}
+
+		T* operator ->()//自定义类型
+		{
+			return &(_cur->_data);//返回地址
+			//it.operator->() _day
+			//->->
+			//返回的一个Date*的指针
+		}
+
+		Self& operator++()
+		{
+			_cur = _cur->_next;
+			return *this;
+		}
+
+		Self& operator--()
+		{
+			_cur = _cur->_prev;
+			return *this;
+		}
+
+		Self operator++ (int)
+		{
+			Self tmp(*this);
+			_cur = _cur->_next;
+			return *tmp;
+		}
+
+		Self operator-- (int)
+		{
+			Self tmp(*this);
+			_cur = _cur->_prev;
+			return *tmp;
+		}
+
+		bool operator!= (const Self& t)
+		{
+			return _cur != t._cur;
+		}
+
+		bool operator== (const Self& t)
+		{
+			return _cur == t._cur;
+		}
+	};
+
+	template <class T> class List
+	{
+	public:
+		typedef List_node <T> Node;
+		typedef itr <T> Itr;
+		typedef List <T> Self;
+
+	private:
+		Node* _head;
+
+	public:
+		//去重list.unique()，平时自己写去重要先排序再去重
+		List()
+		{
+			_head = new Node(T());
+			_head->_next = _head;
+			_head->_prev = _head;
+		}
+
+		Itr begin()
+		{
+			return Itr(_head->_next);
+		}
+
+		Itr end()
+		{
+			return Itr(_head);
+		}
+
+		Itr erase(Itr t)
+		{
+			Node* del = t._cur;
+			if (del == _head)
+				return end();
+			Node* tmp = del->_next;
+			del->_prev->_data = del->_next;
+			del->_next->_prev = del->_prev;
+			delete[] del;
+			return Itr(tmp);
+		}
+
+		Itr insert(Itr t, const T& data)
+		{
+			//Node* newnode = t.node;
+			//Node* prev = t.prev;
+			//Node* next = t.next;
+
+			Node* cur = Node(data);
+			Node* tmp = t._cur;
+			cur->_next = tmp;
+			cur->_prev = tmp->_prev;
+			cur->_prev->_next = cur;
+			tmp->_prev = cur;
+			return Itr(cur);
+		}
+
+		void push_back(const T& t)
+		{
+			//Node* tail = head -> _prev;
+			//Node* newnode = new Node (t);
+			//tail -> _next = newnode;
+			//newnode -> _prev = tail;
+			//newnode -> _next = head;
+			//head -> _next = newnode;
+
+			insert(end(), t);
+		}
+
+		void pop_back()
+		{
+			erase(--end());
+		}
+
+		void push_front(const T& t)
+		{
+			insert(begin(), t);
+		}
+
+		void pop_front()
+		{
+			erase(begin());
+		}
+
+		List(const Self& l)//拷贝构造
+		{
+			_head = new Node;
+			_head->_next = _head;
+			_head->_prev = _head;
+			Node* cur = l._head->_next;
+
+		/*iterator it = l.begin();
+		while(it != l.end())
+		{
+			push_back(*it);
+			++it;
+		}
+		*/
+			while (cur != l.head)
+			{
+				push_back(cur->_data);
+				cur = cur->_next;
+			}
+		}
+
+		void clear()
+		{
+			Node* cur = _head->_next;
+			while (cur != _head)
+			{
+				_head->_next = cur->_next;
+				delete[] cur;
+				cur = _head->_next;
+			}
+			_head->_next = _head;
+			_head->_prve = _head;
+		}
+
+		/*list<T>& operator= (const list<T>& l)
+		{
+			this->clear();
+			auto it = l.begin();
+			while (it != l.end
+			{
+				_back(*it);
+			++it;
+			}
+		}*/
+
+		Self& operator= (Self l)
+		{
+			swap(_head, l._head);
+			return *this;
+		}
+
+		~List()
+		{
+			iterator it = begin();
+			while (it != end())
+			{
+				it = erase(it);
+			}
+			delete _head;
+			_head = nullptr;
+		}
+	};
+	//struct Date
+	//{
+	//	int _day = 100;
+	//}
+
+	int main()
+	{
+		//list<Date> list;
+		////list<Date>::iterator it = list.begin();
+		//auto i = list.begin();
+
+		//list<int> l;
+		//list<int> copy = l;//拷贝构造
+
+
+		return 0;
+	}
+};
